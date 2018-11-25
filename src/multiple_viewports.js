@@ -6,6 +6,7 @@ var change_angle = false;
 var change_trans_y = false;
 var change_trans_z = false;
 
+var c_bodyAngle = 0.0;
 var c_current_ty = 0.0;
 var c_current_tz = 0.0;
 
@@ -15,7 +16,7 @@ var eye_z = -5;
 
 var look_x = 0;
 var look_y = -40;
-var look_z = 6;
+var look_z = 5;
 
 // 카메라 MVP
 var C_MVP = new Matrix4();
@@ -45,7 +46,7 @@ function main()
 
     // angle = 30, near = 1, far = 100
     C_MVP.setPerspective(30, w/(2*h), 1, 100);
-    C_MVP.lookAt(0, 0, 9, 0, 0, -5, 0, 1, 0);
+    C_MVP.lookAt(0, 0, 15, 0, 0, -5, 0, 1, 0);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -83,7 +84,8 @@ function handleKeys() {
     // 시계방향으로 10도 회전
     console.log("bodyAngle= ",bodyAngle);
     change_angle = true;
-    bodyAngle = 10.0;
+    bodyAngle = -10.0;
+    c_bodyAngle += 10.0;
     presskey[37] = false;
   }
   if (presskey[39]) {
@@ -91,31 +93,34 @@ function handleKeys() {
     // 반시계 방향으로 10도 회전
     console.log("bodyAngle= ",bodyAngle);
     change_angle = true;
-    bodyAngle = -10.0;
+    bodyAngle = 10.0;
+    c_bodyAngle -= 10.0;
+
     presskey[39] = false;
   }
   if (presskey[38]) {
     // Up cursor key
     // y축으로 0.05만큼 앞으로
     change_trans_y = true;
-    current_ty = 0.1;
+    current_ty = 0.05;
+    c_current_ty -= 0.05;
+
     presskey[38] = false;
-    c_current_ty +=0.05;
   }
   if (presskey[40]) {
     // Down cursor key
     // y축으로 0.05만큼 뒤로
     change_trans_y = true;
     current_ty = -0.05;
-    c_current_ty -=0.1;
-    presskey[40] = false;
+    c_current_ty += 0.05;
+    presskey[40] = false;  
   }
   if (presskey[83]) {
     // Move downward
     // 0.05만큼 앞으로
     change_trans_z = true;
     current_tz = -0.05;
-    c_current_tz -=0.1;
+    c_current_tz += 0.05;
 
     presskey[83] = false;
   }
@@ -124,7 +129,7 @@ function handleKeys() {
     // 0.05만큼 뒤로
     change_trans_z = true;
     current_tz = 0.05;
-    c_current_tz +=0.1;
+    c_current_tz -= 0.05;
 
     presskey[87] = false;
   }
@@ -141,6 +146,7 @@ function init_vbo(gl)
     //  |/      |/
     //  v2------v3
     var attribs = new Float32Array([
+      //헬리콥터
 		   0.7,  0.7,  0.7,     1.0,  1.0,  1.0,  // v0 White
 	    -0.7,  0.7,  0.7,     1.0,  0.0,  1.0,  // v1 Magenta
 	    -0.7, -0.7,  0.7,     1.0,  0.0,  0.0,  // v2 Red
@@ -149,23 +155,32 @@ function init_vbo(gl)
 	     0.7,  0.7, -0.7,     0.0,  1.0,  1.0,  // v5 Cyan
 	    -0.7,  0.7, -0.7,     0.0,  0.0,  1.0,  // v6 Blue
 	    -0.7, -0.7, -0.7,     0.0,  0.0,  0.0,   // v7 Black
+      //헬리콥터 앞부분
+      0.3,  0.3+0.7,  0.3,     1.0,  1.0,  1.0,  // v0 White
+      -0.3,  0.3+0.7,  0.3,     1.0,  0.0,  1.0,  // v1 Magenta
+      -0.3, -0.3+0.7,  0.3,     1.0,  0.0,  0.0,  // v2 Red
+       0.3, -0.3+0.7,  0.3,     1.0,  1.0,  0.0,  // v3 Yellow
+       0.3, -0.3+0.7, -0.3,     0.0,  1.0,  0.0,  // v4 Green
+       0.3,  0.3+0.7, -0.3,     0.0,  1.0,  1.0,  // v5 Cyan
+      -0.3,  0.3+0.7, -0.3,     0.0,  0.0,  1.0,  // v6 Blue
+      -0.3, -0.3+0.7, -0.3,     0.0,  0.0,  0.0,   // v7 Black
+
 	    // 프로펠러
       2.0, 0.4, 1.0,       0.0, 0.0, 1.0,	//v0
-		-2.0,0.4,  1.0,       1.0, 1.0, 1.0,	//v1
-		-2.0, 0.4, 0.7,       1.0, 0.0, 0.0,	//v2
-		 2.0,0.4,    0.7,     0.0, 0.0, 1.0,	//v3
-		 2.0, -0.4,  0.7,     0.0, 1.0, 0.0,	//v4
-		 2.0, -0.4,  1.0,     0.0, 1.0, 0.0,	//v5
-		-2.0, -0.4,  1.0,     1.0, 0.0, 0.0,	//v6
-		-2.0,-0.4,     0.7,   1.0, 0.0, 0.0,	//v7
-		// 바닥
-	    -5.0, -4.0, -5.0,     1.0, 0.0, 0.0,
-		 5.0,  -4.0, -5.0,     0.0, 1.0, 0.0,
-		 5.0,  4.0,  -5.0,     0.0, 0.0, 1.0,
-		-5.0,  4.0,  -5.0,     1.0, 1.0, 1.0,
+		 -2.0,0.4,  1.0,       1.0, 1.0, 1.0,	//v1
+		 -2.0, 0.4, 0.7,       1.0, 0.0, 0.0,	//v2
+		  2.0,0.4,    0.7,     0.0, 0.0, 1.0,	//v3
+		  2.0, -0.4,  0.7,     0.0, 1.0, 0.0,	//v4
+		  2.0, -0.4,  1.0,     0.0, 1.0, 0.0,	//v5
+		 -2.0, -0.4,  1.0,     1.0, 0.0, 0.0,	//v6
+		 -2.0,-0.4,     0.7,   1.0, 0.0, 0.0,	//v7
+		 // 바닥
+	   -5.0, -4.0, -5.0,     1.0, 0.0, 0.0,
+		  5.0,  -4.0, -5.0,     0.0, 1.0, 0.0,
+		  5.0,  4.0,  -5.0,     0.0, 0.0, 1.0,
+		 -5.0,  4.0,  -5.0,     1.0, 1.0, 1.0,
 	]);
 
-	//  v2------v3
 	// Indices of the vertices
 	// 12개의 triangle을 정의
 	var indices = new Uint8Array([
@@ -182,6 +197,13 @@ function init_vbo(gl)
 	    1+8, 6+8, 7+8,   1+8, 7+8, 2+8,    // left
 	    7+8, 4+8, 3+8,   7+8, 3+8, 2+8,    // down
 	    4+8, 7+8, 6+8,   4+8, 6+8, 5+8,     // back
+
+      0+16, 1+16, 2+16,   0+16, 2+16, 3+16,    // front
+      0+16, 3+16, 4+16,   0+16, 4+16, 5+16,    // right
+      0+16, 5+16, 6+16,   0+16, 6+16, 1+16,    // up
+      1+16, 6+16, 7+16,   1+16, 7+16, 2+16,    // left
+      7+16, 4+16, 3+16,   7+16, 3+16, 2+16,    // down
+      4+16, 7+16, 6+16,   4+16, 6+16, 5+16,     // back
 	 ]);
 
   	// Create a buffer object
@@ -193,7 +215,8 @@ function init_vbo(gl)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, attribs, gl.STATIC_DRAW);
-
+    
+    var FSIZE;
     FSIZE = attribs.BYTES_PER_ELEMENT;
 
     var loc_Position = gl.getAttribLocation(gl.program, 'aPosition');
@@ -210,60 +233,75 @@ function init_vbo(gl)
 
   	return;
 }
-var FSIZE;
+
 function draw(gl,w,h,currentAngle,MVP,loc_MVP){
     //z축을 기준으로 currentAngle만큼 회전
-  	gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-  	//왼쪽 viewport
-  	gl.viewport(0, 0, w/2, h);
+    //왼쪽 viewport
+    gl.viewport(0, 0, w/2, h);
 
     var modelMatrix = new Matrix4();
+    var c_modelMatrix = new Matrix4();
+
+    var temp = new Matrix4();
+    temp.setPerspective(30, w/(2*h), 1, 100);
+    temp.lookAt(0, 0, 15-c_current_tz, 0, 0, -5, 0, 1, 0);
+
+    //rotate -> translate 크게 돌긴하지만 움직이는건 안된다
+    // translate -> rotate 작게돌고 움직이는건 된다. 
+    temp.rotate(c_bodyAngle,0,0,1);
+
+    temp.translate(0,-c_current_ty,0);
 
     if(change_trans_z){
-      modelMatrix.setTranslate(0,0,current_tz);
-      MVP.multiply(modelMatrix);
-      modelMatrix.setTranslate(0,0,-current_tz);
-      modelMatrix = C_MVP.multiply(modelMatrix);
+      MVP.translate(0,0,current_tz);
+      //C_MVP.translate(0,0,-current_tz);
+      C_MVP.setPerspective(30, w/(2*h), 1, 100);
+
+      C_MVP.lookAt(0, 0, 15-c_current_tz, 0, 0, -5, 0, 1, 0);
       change_trans_z = false;
-    }else{
-      if(change_angle){
-        modelMatrix.setRotate(bodyAngle,0,0,1);
-        change_angle = false;
-      }else if(change_trans_y){
-        modelMatrix.setTranslate(0,current_ty,0);
-        change_trans_y = false;
-      }
-      MVP.multiply(modelMatrix);
-      modelMatrix = C_MVP.multiply(modelMatrix);
+    }
+    if(change_angle){
+      MVP.rotate(bodyAngle,0,0,1);
+      C_MVP.rotate(-bodyAngle,0,0,1);
+      change_angle = false;      
+    }
+    if(change_trans_y){
+      MVP.translate(0,current_ty,0);
+      C_MVP.translate(0,-current_ty,0);
+      change_trans_y = false;
     }
 
-  	gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
-  	//몸통
-  	gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
-  	// 프로펠러
-  	var p_modelMatrix = new Matrix4();
-  	p_modelMatrix.set(MVP);
-  	p_modelMatrix.rotate(currentAngle,0,0,1);
-  	gl.uniformMatrix4fv(loc_MVP,false,p_modelMatrix.elements);
-	   //gl.drawArrays(gl.TRIANGLE_FAN,12,4);
-  	gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 36);
 
-  	// 바닥
-  	p_modelMatrix.setPerspective(30, w/(2*h), 1, 100);
-  	p_modelMatrix.lookAt(eye_x, eye_y, eye_z, look_x, look_y, look_z, 0, 1, 0);
+
+    gl.uniformMatrix4fv(loc_MVP, false, MVP.elements);
+    //몸통
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 0);
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 36);
+    // 프로펠러
+    var p_modelMatrix = new Matrix4();
+    p_modelMatrix.set(MVP);
+    p_modelMatrix.rotate(currentAngle,0,0,1);
+    gl.uniformMatrix4fv(loc_MVP,false,p_modelMatrix.elements);
+     //gl.drawArrays(gl.TRIANGLE_FAN,12,4);
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_BYTE, 72);
+
+    // 바닥
+    p_modelMatrix.setPerspective(30, w/(2*h), 1, 100);
+    p_modelMatrix.lookAt(eye_x, eye_y, eye_z, look_x, look_y, look_z, 0, 1, 0);
     p_modelMatrix.translate(0,0,-1);
 
-  	gl.uniformMatrix4fv(loc_MVP, false, p_modelMatrix.elements);
-  	gl.drawArrays(gl.TRIANGLE_FAN, 16, 4);
+    gl.uniformMatrix4fv(loc_MVP, false, p_modelMatrix.elements);
+    gl.drawArrays(gl.TRIANGLE_FAN, 16+8, 4);
 
-  	//오른쪽 viewport ---------------
-  	gl.viewport(w/2, 0, w/2, h);
+    //오른쪽 viewport ---------------
+    gl.viewport(w/2, 0, w/2, h);
 
-  	gl.uniformMatrix4fv(loc_MVP, false, modelMatrix.elements);
-  	gl.drawArrays(gl.TRIANGLE_FAN, 16, 4);
+    gl.uniformMatrix4fv(loc_MVP, false, temp.elements);
+    gl.drawArrays(gl.TRIANGLE_FAN, 16+8, 4);
 
-  	return MVP;
+    return MVP;
 }
 
 var g_last = Date.now();
